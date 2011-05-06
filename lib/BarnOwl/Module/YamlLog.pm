@@ -10,12 +10,14 @@ use BarnOwl::Hooks;
 
 use boolean;
 use DateTime;
+use File::Basename;
+use File::Path;
+use YAML::Syck;
 
-our $messages = undef;
+$YAML::Syck::ImplicitTyping = 1;
 
 sub fail {
     my $msg = shift;
-    $messages = undef;
     BarnOwl::admin_message('YamlLog Error', $msg);
     die("YamlLog Error: $msg\n");
 }
@@ -27,10 +29,6 @@ sub to_boolean {
 
 sub handle_message {
     my $m = shift;
-    if (!$messages) {
-        return;
-    }
-
     $m = {%{$m}};
 
     delete $m->{'id'};
@@ -64,6 +62,7 @@ sub handle_message {
     }
 
     my $path = $ENV{HOME} . "/zlog/" . $m->{'time'}->ymd('/');
+    mkpath(dirname($path));
     if (open(my $fh, ">>", $path)) {
         DumpFile($fh, $m);
     }
